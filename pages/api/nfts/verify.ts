@@ -13,28 +13,36 @@ export const config = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse<object>) {
   
   await NextCors(req, res, {
-    methods: ['POST', 'HEAD', 'OPTIONS'],
+    methods: ['GET', 'HEAD', 'OPTIONS'],
     origin: '*',
   });
   try {
-    const connect = createConnectionConfig(clusterApiUrl("devnet"));
-    const ownerToken =String(req.query.wallet_address)
-    const memberSilver = 'EdrKEeJNN7fSMunhRyjFuwHnKyw3zvLyfZzKbyofwWWD'
-    const result = isValidSolanaAddress(ownerToken);
-    const nfts = await getParsedNftAccountsByOwner({
-        publicAddress: ownerToken,
-        connection: connect,
-    });
-    let isHolder = false
-    nfts.forEach(nft => {
-        nft.data.creators.forEach(creator => {
-            if (creator.address === memberSilver) {
-                isHolder =true
-                return res.json({ isHolder:true,nft});
+      switch (req.method) {
+          case "GET":{
+            const connect = createConnectionConfig(clusterApiUrl("devnet"));
+            const ownerToken =String(req.query.wallet_address)
+            const memberSilver = 'EdrKEeJNN7fSMunhRyjFuwHnKyw3zvLyfZzKbyofwWWD'
+            const result = isValidSolanaAddress(ownerToken);
+            const nfts = await getParsedNftAccountsByOwner({
+                publicAddress: ownerToken,
+                connection: connect,
+            });
+            let isHolder = false
+            nfts.forEach(nft => {
+                nft.data.creators.forEach(creator => {
+                    if (creator.address === memberSilver) {
+                        isHolder =true
+                        return res.json({ isHolder:true,nft});
+                    }
+                })
+            })
+            if(!isHolder) return res.json({ isHolder:false});
             }
-        })
-    })
-    if(!isHolder) return res.json({ isHolder:false});
+          default:
+            res.setHeader('Allow', ['POST']);
+            return res.status(405).end(`Method ${req.method} Not Allowed`);
+      }
+
         
 
     } catch (e) {
