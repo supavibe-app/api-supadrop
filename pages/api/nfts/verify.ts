@@ -21,22 +21,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           case "GET":{
             const connect = createConnectionConfig(clusterApiUrl("devnet"));
             const ownerToken =String(req.query.wallet_address)
-            const memberSilver = 'EdrKEeJNN7fSMunhRyjFuwHnKyw3zvLyfZzKbyofwWWD'
-            const result = isValidSolanaAddress(ownerToken);
+            const memberSilver = '6i1KhupeyzDxLrWCMeoXVea8dcyYwKi87nFpi7H9sdFr'
+            const memberGold = '4upkqK25SwcCtBhMjnm1U3hfT4tWDBUGSh1g82n81mhj'
+            const memberPlatinum = '7n7U38sPfDDSNnYufFsmYTPYN5SWc5pmnTLJoz9h9fBv'
             const nfts = await getParsedNftAccountsByOwner({
                 publicAddress: ownerToken,
                 connection: connect,
             });
             let isHolder = false
-            nfts.forEach(nft => {
-                nft.data.creators.forEach(creator => {
-                    if (creator.address === memberSilver) {
-                        isHolder =true
-                        return res.json({ isHolder:true,nft});
-                    }
-                })
-            })
+            let type = ''
+            for (let i = 0; i < nfts.length; i++) {
+              const nft = nfts[i];
+              const creator = nft.data.creators[0]
+              if (creator.address === memberPlatinum) {
+                isHolder =true
+                type = 'platinum'
+                break
+              }else if(creator.address === memberGold){
+                  isHolder =true
+                  if (type === '' || type === 'silver') {
+                    type = 'gold'
+                  }
+                    
+              }else if (creator.address === memberSilver) {
+                  isHolder =true
+                  if (type === '') {
+                    type = 'silver'
+                  }
+              }
+            }
+           
             if(!isHolder) return res.json({ isHolder:false});
+            else return res.json({ isHolder:true,type});
+                
             }
           default:
             res.setHeader('Allow', ['POST']);
