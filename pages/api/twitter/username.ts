@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 },
               });
               const json = await response.json();
-            if (!json.ok) return res.json({username:json[0].username})
+            if (!json.ok) return res.json({"username":json.data[0].username})
             else return res.status(500).end();
         }
         default:
